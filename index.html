@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCC Squash — Social Media Agent</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap');
+:root{--gold:#B8860B;--gold-light:#F5E6C0;--gold-pale:#FFFBF0;--gold-dark:#7A5800;--charcoal:#1C1C1E;--grey:#6B6B6B;--grey-light:#F5F5F5;--white:#fff;--green:#2E7D32;--green-light:#E8F5E9;--red:#C62828;--red-light:#FFEBEE;--blue:#1565C0;--blue-light:#E3F2FD;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--gold-pale);color:var(--charcoal);min-height:100vh;}
+.header{background:var(--charcoal);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+.header-brand{font-family:'Playfair Display',serif;font-size:20px;color:#fff;}
+.header-brand span{color:var(--gold);}
+.header-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.status{font-size:12px;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:6px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{max-width:900px;margin:0 auto;padding:28px 20px;}
+.tabs{display:flex;gap:4px;background:#fff;border-radius:12px;padding:5px;margin-bottom:22px;border:1px solid rgba(184,134,11,.2);}
+.tab{flex:1;padding:9px 8px;border-radius:8px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--grey);cursor:pointer;transition:all .2s;text-align:center;}
+.tab.active{background:var(--charcoal);color:#fff;}
+.tab:hover:not(.active){background:var(--gold-light);color:var(--gold-dark);}
+.panel{display:none;}.panel.active{display:block;}
+.card{background:#fff;border-radius:14px;padding:22px;border:1px solid rgba(184,134,11,.15);margin-bottom:18px;}
+.card-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+label{display:block;font-size:11px;font-weight:600;color:var(--grey);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
+input,textarea,select{width:100%;padding:9px 13px;border:1.5px solid rgba(184,134,11,.25);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--charcoal);background:var(--gold-pale);outline:none;transition:border-color .2s;margin-bottom:12px;}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);background:#fff;}
+textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.post-types{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
+.post-type-btn{padding:10px 6px;border-radius:10px;border:2px solid rgba(184,134,11,.2);background:#fff;cursor:pointer;text-align:center;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.post-type-btn:hover,.post-type-btn.selected{border-color:var(--gold);background:var(--gold-light);}
+.pt-icon{font-size:20px;margin-bottom:4px;}
+.pt-label{font-size:10px;font-weight:600;color:var(--charcoal);}
+.form-sec{display:none;}.form-sec.active{display:block;}
+.player-row{display:grid;grid-template-columns:1fr 1fr 90px 36px;gap:8px;align-items:center;margin-bottom:8px;}
+.player-row input,.player-row select{margin-bottom:0;}
+.remove-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--red);background:var(--red-light);color:var(--red);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;flex-shrink:0;}
+.btn{padding:10px 20px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
+.btn-gold{background:var(--gold);color:#fff;}.btn-gold:hover{background:var(--gold-dark);}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed;}
+.btn-outline{background:transparent;border:1.5px solid var(--gold);color:var(--gold-dark);}
+.btn-outline:hover{background:var(--gold-light);}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#1B5E20;}
+.btn-grey{background:var(--grey-light);color:var(--grey);border:1.5px solid #ddd;}
+.btn-sm{padding:6px 13px;font-size:12px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.schedule-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.platform-row{display:flex;gap:10px;margin-bottom:14px;}
+.platform-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;border:1.5px solid rgba(184,134,11,.2);cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;user-select:none;}
+.platform-toggle.on{border-color:var(--gold);background:var(--gold-light);}
+.platform-toggle input{display:none;}
+.generated-box{background:var(--gold-pale);border:1.5px solid var(--gold);border-radius:10px;padding:16px;margin-top:14px;display:none;}
+.generated-box.visible{display:block;}
+.gen-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-dark);margin-bottom:8px;}
+.caption-output{font-size:13.5px;line-height:1.7;color:var(--charcoal);white-space:pre-wrap;margin-bottom:10px;min-height:60px;}
+.hashtag-output{font-size:12px;color:var(--blue);line-height:1.8;margin-bottom:12px;}
+.loading{display:none;align-items:center;gap:10px;font-size:13px;color:var(--grey);margin-top:10px;}
+.loading.visible{display:flex;}
+.spinner{width:18px;height:18px;border:2px solid var(--gold-light);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{border:none;border-top:1px solid rgba(184,134,11,.15);margin:14px 0;}
+.text-grey{font-size:12px;color:var(--grey);}
+.queue-item{background:#fff;border:1px solid rgba(184,134,11,.15);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;}
+.q-badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;white-space:nowrap;}
+.b-results{background:var(--green-light);color:var(--green);}
+.b-action{background:#FFF3E0;color:#E65100;}
+.b-promo{background:#F3E5F5;color:#4A148C;}
+.b-kiddies{background:var(--red-light);color:var(--red);}
+.b-ladies{background:var(--blue-light);color:var(--blue);}
+.q-preview{font-size:12.5px;color:var(--grey);line-height:1.5;}
+.q-preview strong{color:var(--charcoal);font-size:13px;}
+.q-actions{display:flex;gap:6px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.stat-mini{background:#fff;border:1px solid rgba(184,134,11,.15);border-radius:10px;padding:14px;text-align:center;}
+.stat-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--gold-dark);line-height:1;}
+.stat-label{font-size:11px;color:var(--grey);margin-top:4px;}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.settings-card{background:#fff;border:1px solid rgba(184,134,11,.15);border-radius:12px;padding:18px;}
+.settings-card h4{font-size:13px;font-weight:600;margin-bottom:12px;}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:#fff;transform:translateY(80px);transition:transform .3s;z-index:999;}
+.toast.show{transform:translateY(0);}
+.toast.success{background:var(--green);}
+.toast.error{background:var(--red);}
+.toast.info{background:var(--blue);}
+.empty-state{text-align:center;padding:40px;color:var(--grey);font-size:13px;}
+.setup-banner{background:var(--blue-light);border:1.5px solid var(--blue);border-radius:12px;padding:18px 22px;margin-bottom:22px;}
+.setup-banner h3{font-size:14px;font-weight:600;color:var(--blue);margin-bottom:10px;}
+.setup-step{font-size:12.5px;color:var(--charcoal);display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;}
+.step-num{background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="header-brand">PCC <span>Social Agent</span></div>
+    <div class="header-sub">Squash Academy by NuAg — Pretoria Country Club</div>
+  </div>
+  <div class="status"><div class="dot"></div>Agent Ready</div>
+</div>
+
+<div class="main">
+
+<div class="setup-banner" id="setupBanner">
+  <h3>⚙️ First time? Add your Claude API key in Settings below — takes 2 minutes</h3>
+  <div class="setup-step"><div class="step-num">1</div><div>Go to <strong>platform.anthropic.com</strong> → Sign up → API Keys → Create Key → copy it</div></div>
+  <div class="setup-step"><div class="step-num">2</div><div>Click the <strong>Settings tab</strong> below → paste key → Save Settings</div></div>
+  <div class="setup-step"><div class="step-num">3</div><div>Come back to <strong>Create Post</strong> and generate your first caption</div></div>
+  <div style="margin-top:8px"><span style="font-size:12px;color:var(--blue);cursor:pointer;font-weight:600" onclick="document.getElementById('setupBanner').style.display='none'">✕ Dismiss</span></div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-mini"><div class="stat-num" id="statQueued">0</div><div class="stat-label">Queued</div></div>
+  <div class="stat-mini"><div class="stat-num" id="statPosted">0</div><div class="stat-label">Posted This Month</div></div>
+  <div class="stat-mini"><div class="stat-num" id="statNextDay">—</div><div class="stat-label">Next Post Day</div></div>
+  <div class="stat-mini"><div class="stat-num" id="statNextTime">—</div><div class="stat-label">Next Post Time</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(this,'create')">✏️ Create Post</button>
+  <button class="tab" onclick="switchTab(this,'queue')">📅 Queue</button>
+  <button class="tab" onclick="switchTab(this,'settings')">⚙️ Settings</button>
+</div>
+
+<!-- CREATE -->
+<div class="panel active" id="panel-create">
+  <div class="card">
+    <div class="card-title">🎯 Post Type</div>
+    <div class="post-types">
+      <div class="post-type-btn selected" onclick="selectType(this,'results')"><div class="pt-icon">🏆</div><div class="pt-label">Tournament Results</div></div>
+      <div class="post-type-btn" onclick="selectType(this,'action')"><div class="pt-icon">🎾</div><div class="pt-label">On-Court Action</div></div>
+      <div class="post-type-btn" onclick="selectType(this,'kiddies')"><div class="pt-icon">👶</div><div class="pt-label">Kiddies Group</div></div>
+      <div class="post-type-btn" onclick="selectType(this,'promo')"><div class="pt-icon">📣</div><div class="pt-label">Promo / Spaces</div></div>
+      <div class="post-type-btn" onclick="selectType(this,'ladies')"><div class="pt-icon">👩</div><div class="pt-label">Ladies Session</div></div>
+    </div>
+  </div>
+
+  <div class="card" id="inputForm">
+    <!-- RESULTS -->
+    <div class="form-sec active" id="form-results">
+      <div class="card-title">🏆 Tournament Details</div>
+      <label>Tournament Name</label>
+      <input type="text" id="tournamentName" placeholder="e.g. NJSA Closed Ranking Tournament 2026">
+      <label>Date / Weekend</label>
+      <input type="text" id="tournamentDate" placeholder="e.g. 16–18 May 2026">
+      <label>Player Results</label>
+      <div id="playerRows">
+        <div class="player-row">
+          <input type="text" placeholder="Player name" class="player-name" style="margin-bottom:0">
+          <input type="text" placeholder="Category e.g. Boys U17A" class="player-cat" style="margin-bottom:0">
+          <select class="player-place" style="margin-bottom:0"><option>1st 🥇</option><option>2nd 🥈</option><option>3rd 🥉</option><option>4th</option><option>5th</option><option>6th</option><option>7th–8th</option><option>9th–12th</option></select>
+          <button class="remove-btn" onclick="removePlayer(this)">×</button>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="addPlayer()">+ Add Player</button>
+      <hr class="divider">
+      <label>Extra context (optional)</label>
+      <textarea id="resultsExtra" placeholder="e.g. Biggest tournament of the year, tough conditions..."></textarea>
+    </div>
+    <!-- ACTION -->
+    <div class="form-sec" id="form-action">
+      <div class="card-title">🎾 Session Details</div>
+      <label>Group</label>
+      <select id="actionGroup"><option>All groups</option><option>Kiddies (5–9)</option><option>Junior Schoolers (10–13)</option><option>High Schoolers (14–18)</option></select>
+      <label>Session focus</label>
+      <input type="text" id="actionFocus" placeholder="e.g. Ghosting drills, backhand technique...">
+      <label>Anything specific to mention?</label>
+      <textarea id="actionExtra" placeholder="e.g. Great energy, 6 kids today, new player joined..."></textarea>
+    </div>
+    <!-- KIDDIES -->
+    <div class="form-sec" id="form-kiddies">
+      <div class="card-title">👶 Kiddies Group Post</div>
+      <label>Spaces available</label>
+      <select id="kiddiesSpaces"><option>A few spots still available</option><option>1 spot left</option><option>2 spots left</option><option>3 spots left</option><option>Open — recruiting</option></select>
+      <label>Specific angle for this post?</label>
+      <textarea id="kiddiesExtra" placeholder="e.g. Promoting Saturday session, holiday camp coming..."></textarea>
+    </div>
+    <!-- PROMO -->
+    <div class="form-sec" id="form-promo">
+      <div class="card-title">📣 Promotional Post</div>
+      <label>Which group?</label>
+      <select id="promoGroup"><option>Kiddies (5–9) 🔴 Priority</option><option>Junior Schoolers (10–13)</option><option>High Schoolers (14–18)</option><option>All groups</option><option>Holiday Camp</option></select>
+      <label>Promotion details</label>
+      <textarea id="promoExtra" placeholder="e.g. Holiday camp 7–21 July, R200/session. Or: 3 spaces in Junior group, R800/month..."></textarea>
+    </div>
+    <!-- LADIES -->
+    <div class="form-sec" id="form-ladies">
+      <div class="card-title">👩 Ladies Session — Every Monday at PCC</div>
+      <label>Angle</label>
+      <select id="ladiesAngle"><option>General awareness</option><option>Beginner focus — never played</option><option>Social / fun angle</option><option>Fitness / health angle</option><option>Returning player</option></select>
+      <label>Spaces</label>
+      <select id="ladiesSpaces"><option>Open to all — come along</option><option>Limited spaces — book ahead</option><option>A few spots left</option></select>
+      <label>Anything specific?</label>
+      <textarea id="ladiesExtra" placeholder="e.g. Great turnout last week, new ladies joining..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 Schedule & Platforms</div>
+    <div class="schedule-row">
+      <div><label>Post Day</label>
+        <select id="schedDay" onchange="updateNext()">
+          <option value="monday">Monday</option><option value="wednesday">Wednesday</option><option value="friday">Friday</option><option value="now">Post Immediately</option>
+        </select>
+      </div>
+      <div><label>Post Time</label>
+        <select id="schedTime" onchange="updateNext()">
+          <option value="07:00">07:00 AM</option><option value="08:00" selected>08:00 AM</option><option value="12:00">12:00 PM</option><option value="17:00">05:00 PM</option><option value="19:00">07:00 PM</option>
+        </select>
+      </div>
+      <div><label>Next Slot</label><input type="text" id="nextSlot" readonly style="background:var(--grey-light);color:var(--grey);margin-bottom:0"></div>
+    </div>
+    <label>Platforms</label>
+    <div class="platform-row">
+      <label class="platform-toggle on" id="togIG"><input type="checkbox" id="chkIG" checked onchange="togglePlatform('togIG',this)">📸 Instagram</label>
+      <label class="platform-toggle on" id="togFB"><input type="checkbox" id="chkFB" checked onchange="togglePlatform('togFB',this)">👍 Facebook</label>
+    </div>
+    <div class="text-grey">Image URL (optional — needed for Instagram)</div>
+    <input type="text" id="mediaUrl" placeholder="Paste image link here (optional)" style="margin-top:6px">
+  </div>
+
+  <div class="card">
+    <div class="card-title">✨ Generate Caption</div>
+    <div class="row">
+      <button class="btn btn-gold" onclick="generateCaption()" id="generateBtn">✨ Generate with AI</button>
+      <button class="btn btn-grey" onclick="clearForm()">Clear</button>
+    </div>
+    <div class="loading" id="loadingSpinner"><div class="spinner"></div>Claude is writing your caption...</div>
+    <div class="generated-box" id="generatedBox">
+      <div class="gen-label">Caption — edit as needed</div>
+      <div class="caption-output" id="captionOut" contenteditable="true"></div>
+      <div class="gen-label">Hashtags</div>
+      <div class="hashtag-output" id="hashtagOut" contenteditable="true"></div>
+      <hr class="divider">
+      <div class="row">
+        <button class="btn btn-gold" onclick="generateCaption()">🔄 Regenerate</button>
+        <button class="btn btn-green" onclick="addToQueue()">📅 Add to Queue</button>
+        <button class="btn btn-outline" onclick="copyCaption()">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUEUE -->
+<div class="panel" id="panel-queue">
+  <div class="card">
+    <div class="card-title">📅 Post Queue</div>
+    <div id="queueList"><div class="empty-state">No posts queued yet. Create a post to get started.</div></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="panel" id="panel-settings">
+  <div class="settings-grid">
+    <div class="settings-card">
+      <h4>🤖 Claude API Key</h4>
+      <label>API Key</label>
+      <input type="password" id="settingKey" placeholder="sk-ant-...">
+      <div class="text-grey">Get yours free at platform.anthropic.com → API Keys</div>
+    </div>
+    <div class="settings-card">
+      <h4>📘 Meta API (Facebook/Instagram)</h4>
+      <label>Access Token</label>
+      <input type="password" id="settingMetaToken" placeholder="EAAxxxxxx...">
+      <label>Facebook Page ID</label>
+      <input type="text" id="settingPageId" placeholder="123456789">
+      <label>Instagram Business Account ID</label>
+      <input type="text" id="settingIgId" placeholder="987654321">
+    </div>
+    <div class="settings-card">
+      <h4>🎾 Academy</h4>
+      <label>Academy Name</label>
+      <input type="text" id="settingName" value="PCC Squash Academy by NuAg">
+      <label>Location</label>
+      <input type="text" id="settingLocation" value="Pretoria Country Club">
+      <label>Tone</label>
+      <select id="settingTone"><option value="proud">Proud & celebratory</option><option value="energetic">Energetic & motivating</option><option value="professional">Professional</option></select>
+    </div>
+    <div class="settings-card">
+      <h4>⏰ Default Schedule</h4>
+      <label>Results posts</label><select><option>Monday 08:00</option></select>
+      <label>Action posts</label><select><option>Wednesday 08:00</option></select>
+      <label>Promo posts</label><select><option>Friday 08:00</option></select>
+    </div>
+  </div>
+  <div style="margin-top:14px"><button class="btn btn-gold" onclick="saveSettings()">💾 Save Settings</button></div>
+</div>
+
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────
+let currentType = 'results';
+let queue = JSON.parse(localStorage.getItem('pcc_q') || '[]');
+let settings = JSON.parse(localStorage.getItem('pcc_s') || '{}');
+let postedCount = parseInt(localStorage.getItem('pcc_p') || '0');
+
+window.onload = () => { loadSettings(); renderQueue(); updateStats(); updateNext(); };
+
+// ── TABS ─────────────────────────────────────────────────────────────────
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'queue') renderQueue();
+}
+
+// ── POST TYPE ────────────────────────────────────────────────────────────
+function selectType(el, type) {
+  document.querySelectorAll('.post-type-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  currentType = type;
+  document.querySelectorAll('.form-sec').forEach(f => f.classList.remove('active'));
+  document.getElementById('form-' + type).classList.add('active');
+  const days = { results:'monday', action:'wednesday', kiddies:'friday', promo:'friday', ladies:'friday' };
+  document.getElementById('schedDay').value = days[type];
+  updateNext();
+  document.getElementById('generatedBox').classList.remove('visible');
+}
+
+// ── PLAYERS ──────────────────────────────────────────────────────────────
+function addPlayer() {
+  const div = document.createElement('div');
+  div.className = 'player-row';
+  div.innerHTML = `<input type="text" placeholder="Player name" class="player-name" style="margin-bottom:0"><input type="text" placeholder="Category" class="player-cat" style="margin-bottom:0"><select class="player-place" style="margin-bottom:0"><option>1st 🥇</option><option>2nd 🥈</option><option>3rd 🥉</option><option>4th</option><option>5th</option><option>6th</option><option>7th–8th</option><option>9th–12th</option></select><button class="remove-btn" onclick="removePlayer(this)">×</button>`;
+  document.getElementById('playerRows').appendChild(div);
+}
+function removePlayer(btn) { if (document.querySelectorAll('.player-row').length > 1) btn.closest('.player-row').remove(); }
+
+// ── SCHEDULE ─────────────────────────────────────────────────────────────
+function updateNext() {
+  const day = document.getElementById('schedDay').value;
+  const time = document.getElementById('schedTime').value;
+  if (day === 'now') { document.getElementById('nextSlot').value = 'Immediately'; return; }
+  const map = { monday:1, wednesday:3, friday:5 };
+  const today = new Date();
+  let diff = map[day] - today.getDay();
+  if (diff <= 0) diff += 7;
+  const next = new Date(today);
+  next.setDate(today.getDate() + diff);
+  document.getElementById('nextSlot').value = next.toLocaleDateString('en-ZA', { weekday:'short', day:'numeric', month:'short' }) + ' ' + time;
+}
+
+function togglePlatform(id, cb) { document.getElementById(id).classList.toggle('on', cb.checked); }
+
+// ── PROMPT BUILDER ────────────────────────────────────────────────────────
+function buildPrompt() {
+  const name = settings.name || 'PCC Squash Academy by NuAg';
+  const loc  = settings.location || 'Pretoria Country Club';
+  const tone = { proud:'proud, warm and celebratory', energetic:'energetic and motivating', professional:'professional and informative' }[settings.tone || 'proud'];
+  let ctx = '';
+
+  if (currentType === 'results') {
+    const players = [...document.querySelectorAll('.player-row')].map(r => {
+      const n = r.querySelector('.player-name').value;
+      const c = r.querySelector('.player-cat').value;
+      const p = r.querySelector('.player-place').value;
+      return n ? `${n} — ${c} — ${p}` : null;
+    }).filter(Boolean).join('\n');
+    ctx = `Post type: TOURNAMENT RESULTS\nTournament: ${document.getElementById('tournamentName').value || 'recent tournament'}\nDate: ${document.getElementById('tournamentDate').value || ''}\nResults:\n${players || 'Multiple players competed'}\nExtra: ${document.getElementById('resultsExtra').value || 'none'}`;
+  } else if (currentType === 'action') {
+    ctx = `Post type: ON-COURT ACTION\nGroup: ${document.getElementById('actionGroup').value}\nFocus: ${document.getElementById('actionFocus').value || 'drills and technique'}\nExtra: ${document.getElementById('actionExtra').value || 'none'}`;
+  } else if (currentType === 'kiddies') {
+    ctx = `Post type: KIDDIES GROUP (ages 5-9, PRIORITY growth group)\nSpaces: ${document.getElementById('kiddiesSpaces').value}\nExtra: ${document.getElementById('kiddiesExtra').value || 'none'}\nIMPORTANT: Appeal to parents of young children. Mention first session is FREE.`;
+  } else if (currentType === 'promo') {
+    ctx = `Post type: PROMOTIONAL\nGroup: ${document.getElementById('promoGroup').value}\nDetails: ${document.getElementById('promoExtra').value || 'none'}`;
+  } else if (currentType === 'ladies') {
+    ctx = `Post type: LADIES SESSION — Every Monday at PCC\nLevel: Beginner friendly, FREE for PCC members\nAngle: ${document.getElementById('ladiesAngle').value}\nSpaces: ${document.getElementById('ladiesSpaces').value}\nExtra: ${document.getElementById('ladiesExtra').value || 'none'}\nIMPORTANT: Warm, welcoming tone for adult women. Not intimidating.`;
+  }
+
+  return `You are the social media manager for ${name} at ${loc}, Pretoria, South Africa.\n\nWrite an Instagram/Facebook caption. Tone: ${tone}.\n\nAcademy: Elite junior squash coaching ages 5–18 at Pretoria Country Club. Players win at NJSA and national level. Three groups: Kiddies (5–9), Junior Schoolers (10–13), High Schoolers (14–18).\n\n${ctx}\n\nRules:\n- 80–150 words\n- End with a call to action (DM us, comment below)\n- Include: 📍 ${loc}\n- 1–3 natural emojis, not excessive\n- Sound like a real proud coach, not a marketing bot\n- After the caption write "HASHTAGS:" then 10–12 relevant hashtags including #PCCSquash #NuAgAcademy #PretoriaCountryClub\n\nReturn ONLY caption and hashtags. No explanations.`;
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────────────
+async function generateCaption() {
+  const apiKey = settings.apiKey;
+  if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+    showToast('Please add your Claude API key in Settings first', 'error');
+    return;
+  }
+
+  document.getElementById('loadingSpinner').classList.add('visible');
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('generatedBox').classList.remove('visible');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: buildPrompt() }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'API error ' + res.status);
+    }
+
+    const data = await res.json();
+    const full = data.content[0].text;
+    const hi = full.indexOf('HASHTAGS:');
+    const caption = hi > -1 ? full.slice(0, hi).trim() : full.trim();
+    const hashtags = hi > -1 ? full.slice(hi + 9).trim() : '#PCCSquash #NuAgAcademy #PretoriaCountryClub #JuniorSquash';
+
+    document.getElementById('captionOut').textContent = caption;
+    document.getElementById('hashtagOut').textContent = hashtags;
+    document.getElementById('generatedBox').classList.add('visible');
+    showToast('Caption ready!', 'success');
+
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    document.getElementById('loadingSpinner').classList.remove('visible');
+    document.getElementById('generateBtn').disabled = false;
+  }
+}
+
+// ── QUEUE ─────────────────────────────────────────────────────────────────
+function addToQueue() {
+  const caption  = document.getElementById('captionOut').textContent;
+  const hashtags = document.getElementById('hashtagOut').textContent;
+  if (!caption) { showToast('Generate a caption first', 'error'); return; }
+  const item = {
+    id: Date.now(), type: currentType, caption, hashtags,
+    schedDay: document.getElementById('schedDay').value,
+    schedTime: document.getElementById('schedTime').value,
+    nextSlot: document.getElementById('nextSlot').value,
+    ig: document.getElementById('chkIG').checked,
+    fb: document.getElementById('chkFB').checked,
+    mediaUrl: document.getElementById('mediaUrl').value,
+    status: 'queued'
+  };
+  queue.unshift(item);
+  localStorage.setItem('pcc_q', JSON.stringify(queue));
+  renderQueue(); updateStats();
+  showToast('Added to queue — ' + item.nextSlot, 'success');
+  document.getElementById('generatedBox').classList.remove('visible');
+}
+
+function renderQueue() {
+  const el = document.getElementById('queueList');
+  if (!queue.length) { el.innerHTML = '<div class="empty-state">No posts queued yet.</div>'; return; }
+  const badges = { results:'b-results 🏆 Results', action:'b-action 🎾 Action', kiddies:'b-kiddies 👶 Kiddies', promo:'b-promo 📣 Promo', ladies:'b-ladies 👩 Ladies' };
+  el.innerHTML = queue.map(q => {
+    const [bc, bl] = badges[q.type].split(' ').reduce((a,v,i) => i===0?[v,a[1]]:[a[0],a[1]+' '+v], ['','']);
+    return `<div class="queue-item">
+      <div><div class="q-badge ${bc}">${bl.trim()}</div><div style="font-size:11px;color:var(--grey);margin-top:6px">${q.ig?'📸':''} ${q.fb?'👍':''}</div></div>
+      <div class="q-preview"><strong>${q.nextSlot}</strong><br>${q.caption.slice(0,100)}...</div>
+      <div class="q-actions">
+        <button class="btn btn-green btn-sm" onclick="postNow(${q.id})">Post Now</button>
+        <button class="btn btn-grey btn-sm" onclick="removeQ(${q.id})">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeQ(id) { queue = queue.filter(q => q.id !== id); localStorage.setItem('pcc_q', JSON.stringify(queue)); renderQueue(); updateStats(); showToast('Removed', 'info'); }
+
+async function postNow(id) {
+  const item = queue.find(q => q.id === id);
+  if (!item) return;
+  const { metaToken, pageId, igId } = settings;
+  if (!metaToken || !pageId) { showToast('Add Meta API credentials in Settings', 'error'); return; }
+  const text = item.caption + '\n\n' + item.hashtags;
+  if (item.fb) {
+    try {
+      const r = await fetch(`https://graph.facebook.com/v19.0/${pageId}/feed`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: text, access_token: metaToken }) });
+      const d = await r.json();
+      if (d.id) showToast('✅ Posted to Facebook!', 'success');
+      else showToast('Facebook error: ' + (d.error?.message || 'unknown'), 'error');
+    } catch(e) { showToast('Facebook failed: ' + e.message, 'error'); }
+  }
+  queue = queue.filter(q => q.id !== id);
+  postedCount++;
+  localStorage.setItem('pcc_q', JSON.stringify(queue));
+  localStorage.setItem('pcc_p', postedCount);
+  renderQueue(); updateStats();
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────
+function saveSettings() {
+  settings = {
+    apiKey: document.getElementById('settingKey').value.trim(),
+    metaToken: document.getElementById('settingMetaToken').value.trim(),
+    pageId: document.getElementById('settingPageId').value.trim(),
+    igId: document.getElementById('settingIgId').value.trim(),
+    name: document.getElementById('settingName').value,
+    location: document.getElementById('settingLocation').value,
+    tone: document.getElementById('settingTone').value,
+  };
+  localStorage.setItem('pcc_s', JSON.stringify(settings));
+  showToast('Settings saved!', 'success');
+}
+
+function loadSettings() {
+  if (settings.apiKey) document.getElementById('settingKey').value = settings.apiKey;
+  if (settings.metaToken) document.getElementById('settingMetaToken').value = settings.metaToken;
+  if (settings.pageId) document.getElementById('settingPageId').value = settings.pageId;
+  if (settings.igId) document.getElementById('settingIgId').value = settings.igId;
+  if (settings.name) document.getElementById('settingName').value = settings.name;
+  if (settings.location) document.getElementById('settingLocation').value = settings.location;
+  if (settings.tone) document.getElementById('settingTone').value = settings.tone;
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('statQueued').textContent = queue.length;
+  document.getElementById('statPosted').textContent = postedCount;
+  const next = queue[0];
+  if (next) {
+    const p = next.nextSlot.split(' ');
+    document.getElementById('statNextDay').textContent = p.slice(0,-1).join(' ') || '—';
+    document.getElementById('statNextTime').textContent = p[p.length-1] || '—';
+  } else {
+    document.getElementById('statNextDay').textContent = '—';
+    document.getElementById('statNextTime').textContent = '—';
+  }
+}
+
+function copyCaption() {
+  const text = document.getElementById('captionOut').textContent + '\n\n' + document.getElementById('hashtagOut').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied!', 'success'));
+}
+
+function clearForm() {
+  document.getElementById('tournamentName').value = '';
+  document.getElementById('tournamentDate').value = '';
+  document.getElementById('resultsExtra').value = '';
+  document.querySelectorAll('.player-name,.player-cat').forEach(i => i.value = '');
+  document.getElementById('generatedBox').classList.remove('visible');
+}
+
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
